@@ -7,7 +7,7 @@ import { useAuthStore } from "../../stores/userStores";
 import { updateDepartment } from "../../api/api";
 import { useAppSettingsStore } from "../../stores/useSettingsStore";
 import { Menu } from "lucide-react";
-import toast from "react-hot-toast"; // ✅ Global toast import
+import toast from "react-hot-toast";
 
 function CoSuperAdminDepartments() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -16,7 +16,7 @@ function CoSuperAdminDepartments() {
 
   const departments = useAuthStore((state) => state.departments);
   const fetchDepartment = useAuthStore((state) => state.getDepartment);
-  const deleteDepartment = useAuthStore((state) => state.deleteDept);
+  const deleteDept = useAuthStore((state) => state.deleteDept);
 
   // Edit modal
   const [showEditModal, setShowEditModal] = useState(false);
@@ -100,25 +100,25 @@ function CoSuperAdminDepartments() {
   };
 
   const handleConfirmDelete = async () => {
-    if (!deletingDept) return;
-    try {
-      setIsDeleting(true);
-      setDeleteError("");
-      await deleteDepartment(deletingDept.id);
-      const { error } = useAuthStore.getState();
-      if (error) throw new Error(error);
+  if (!deletingDept) return;
 
-      await fetchDepartment();
-      setShowDeleteModal(false);
-      setDeletingDept(null);
-      toast.success("✅ Department deleted successfully!");
-    } catch (err) {
-      setDeleteError(err?.message || "Failed to delete department.");
-      toast.error("❌ " + (err?.message || "Failed to delete department."));
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  try {
+    setIsDeleting(true);
+
+    // This should throw if deletion fails (e.g., 401)
+    await deleteDept(deletingDept.id); 
+    await fetchDepartment();
+
+    // Only show success if no error
+    toast.success(`✅ Department "${deletingDept.department_name}" deleted successfully!`);
+    setShowDeleteModal(false);
+    setDeletingDept(null);
+  } catch (err) {
+    toast.error(`❌ ${err.message}`);
+  } finally {
+    setIsDeleting(false);
+  }
+};
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gray-50">

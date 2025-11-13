@@ -161,7 +161,6 @@ export default function LandingPage() {
     setSelectedImages([]);
     setSubmitted(true);
 
-    const accessToken = useAuthStore.getState().access_token;
     let streamedAnswer = "";
 
     try {
@@ -169,7 +168,7 @@ export default function LandingPage() {
 
       await generateAnswer(
         trimmed,
-        accessToken,
+
         (chunk) => {
           streamedAnswer += chunk;
           setChatHistory((prev) => {
@@ -179,7 +178,7 @@ export default function LandingPage() {
             return [...updated.slice(0, -1), last];
           });
         },
-        selectedImages
+        selectedImages || []
       );
 
       if (voiceMode && streamedAnswer.trim()) {
@@ -294,17 +293,13 @@ const handleRegister = async (e) => {
     setIsRegistering(true);
     const response = await signup(userData);
 
-    // ✅ FIXED: Handle various possible return shapes
-    if (!response || response.error) {
-      toast.error(response?.error || "Failed to register. Please try again.");
-      return;
-    }
-
     toast.success("Account created successfully!");
     window.location.reload();
   } catch (err) {
     console.error("Registration error:", err);
-    toast.error("Something went wrong, please try again.");
+
+    // err.message contains your Pydantic validation message
+    toast.error(err.message || "Something went wrong, please try again.");
   } finally {
     setIsRegistering(false);
   }

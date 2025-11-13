@@ -1,200 +1,209 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-//const API_BASE_URL = "http://127.0.0.1:8000"
-
+//const API_BASE_URL = "http://127.0.0.1:8000";
 
 export const createUsers = async (userData) => {
-    try {
-        console.log("🔍 Sending userData:", userData);
-        const response = await fetch(`${API_BASE_URL}/users/sign-up`, { 
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userData)
-        });
+  try {
+    const response = await fetch(`${API_BASE_URL}/sign-up`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userData),
+    });
 
-        if (!response.ok) {
-            
-            const errorData = await response.json();
-            throw new Error(errorData.detail || 'Failed to create user');
-        }
+    const responseData = await response.json(); // parse once
 
-        const data = await response.json(); 
-        return data; 
-    } catch (error) {
-        console.error("Error creating user:", error);
-        throw error;
+    if (!response.ok) {
+      const messages = Array.isArray(responseData.detail)
+        ? responseData.detail.map((err) => err.msg).join(", ")
+        : responseData.detail;
+      throw new Error(messages || "Failed to create user");
     }
+
+    return responseData;
+  } catch (error) {
+    console.error("Error creating user:", error);
+    throw error;
+  }
 };
 
 export const getUser = async () => {
-    const response = await fetch(`${API_BASE_URL}/users/users`)
-    if(!response.ok){
-        throw new Error("Failed to fetch users");
-    }
-    return await response.json();
-    
-}
+  const response = await fetch(`${API_BASE_URL}/users`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch users");
+  }
+  return await response.json();
+};
 
 export const loginUser = async (userData) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/users/login`,{
-            method:'POST',
-            headers:{
-                'Content-Type':'application/json'
-            },
-            body:JSON.stringify(userData)
-        })
-        if (!response.ok){
-            const errorData = await response.json();
-            throw new Error(errorData.detail || 'Something unexpected happen please try again')
-        }
-        const data = await response.json()
-        return data
-    } catch (error) {
-        console.error("Failed to login:",error);
-        throw error
+  try {
+    const response = await fetch(`${API_BASE_URL}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(userData),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.detail || "Something unexpected happen please try again"
+      );
     }
-}
+    const data = await response.json();
+
+    return data;
+  } catch (error) {
+    console.error("Failed to login:", error);
+    throw error;
+  }
+};
 
 export const userUpdate = async (users_id, updatedData) => {
-  
   try {
-    const response = await fetch(`${API_BASE_URL}/users/update-users/${users_id}`, {
-      method: 'PUT',
+    const response = await fetch(`${API_BASE_URL}/update-users/${users_id}`, {
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify(updatedData),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(errorText || 'Failed to update user');
+      throw new Error(errorText || "Failed to update user");
     }
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
       return await response.json();
     } else {
-      return {}; 
+      return {};
     }
-
   } catch (error) {
     console.error("Update error:", error.message);
     throw error;
   }
 };
 
-export const userDelete = async(users_id) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/users/delete-users/${users_id}`,{
-            method:"DELETE",
-            headers:{
-                'Content-Type':'application/json'
-            },
-        })
-    } catch (error) {
-        console.error("Network error during department deletion:", error);
-        return false;
-    }
-}
+export const userDelete = async (users_id) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/delete-users/${users_id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+  } catch (error) {
+    console.error("Network error during department deletion:", error);
+    return false;
+  }
+};
 //department
-export const createDepartment = async (departmentData) =>{
-    try{
-        const response = await fetch(`${API_BASE_URL}/users/add-department`,{
-            method:"POST",
-            headers:{
-                'Content-Type':'application/json'
-            },
-            body:JSON.stringify(departmentData)
-        })
-        if(!response.ok){
-            const errorData = await  response.json();
-            throw new Error(errorData.detail || 'Something wrong creating department')
-        }
-        const data = await response.json()
-        return data
-        
+export const createDepartment = async (departmentData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/add-department`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(departmentData),
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.detail || "Something wrong creating department"
+      );
     }
-    catch(error){
-        console.error("Failed to create:",error)
-        throw error
-    }
-}
-
-export const fetchDepartment = async () => {
-    const response = await fetch(`${API_BASE_URL}/users/department`)
-    if(!response.ok){
-        throw new Error("Failed to fetch departments");
-    }
-    return await response.json();
-}
-
-export const deleteDepartment = async (department_id) => {
-    try {
-        if(!department_id){
-            console.error("Department ID is required to delete department")
-            throw Error
-        }
-        const response = await fetch(`${API_BASE_URL}/users/delete-department/${department_id}`,{
-            method:"DELETE",
-            headers:{
-                'Content-Type':'application/json'
-            },
-        })
-        if(response.ok){
-            console.log(`Department with an ID of ${department_id} is successfully deleted`)
-        }else{
-            const errorData = await response.json();
-            throw new Error(errorData.detail || "Failed to delete department");
-        }
-
-    } catch (error) {
-        console.error("Network error during department deletion:", error);
-        return false;
-    }
-}
-export const updateDepartment = async (department_id, department_name) => {
-    try {
-        if (!department_id || !department_name) {
-            throw new Error("Both department ID and name are required");
-        }
-
-        const response = await fetch(`${API_BASE_URL}/users/update-department/${department_id}`, {
-            method: "PUT",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                department_name: department_name
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || "Failed to update department");
-        }
-
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error("Update failed:", error.message);
-        throw error;
-    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Failed to create:", error);
+    throw error;
+  }
 };
 
+export const fetchDepartment = async () => {
+  const response = await fetch(`${API_BASE_URL}/department`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch departments");
+  }
+  return await response.json();
+};
+
+export const deleteDepartment = async (department_id) => {
+  try {
+    if (!department_id) {
+      console.error("Department ID is required to delete department");
+      throw Error;
+    }
+    const response = await fetch(
+      `${API_BASE_URL}/delete-department/${department_id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      }
+    );
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to delete department");
+    }
+    return true;
+  } catch (error) {
+    throw error;
+  }
+};
+export const updateDepartment = async (department_id, department_name) => {
+  try {
+    if (!department_id || !department_name) {
+      throw new Error("Both department ID and name are required");
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/update-department/${department_id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          department_name: department_name,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to update department");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Update failed:", error.message);
+    throw error;
+  }
+};
 
 //upload documents
 export const uploadDocument = async (formData) => {
   try {
-    const token = localStorage.getItem("access_token");
-    const response = await fetch(`${API_BASE_URL}/users/upload`, {
+    const response = await fetch(`${API_BASE_URL}/upload`, {
       method: "POST",
-      headers:{
-        Authorization: `Bearer ${token}`
-      },
       body: formData,
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -212,15 +221,13 @@ export const uploadDocument = async (formData) => {
 
 export const submitManualEntry = async (payload) => {
   try {
-    const token = localStorage.getItem("access_token");
-
-    const response = await fetch(`${API_BASE_URL}/users/manual-entry`, {
+    const response = await fetch(`${API_BASE_URL}/manual-entry`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -237,13 +244,12 @@ export const submitManualEntry = async (payload) => {
 
 export const fetchDocument = async () => {
   try {
-    const token = localStorage.getItem("access_token");
-    const response = await fetch(`${API_BASE_URL}/users/documents`, {
+    const response = await fetch(`${API_BASE_URL}/documents`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -262,13 +268,13 @@ export const fetchDocumentsByTitle = async (titleName) => {
     const token = localStorage.getItem("access_token");
 
     const response = await fetch(
-      `${API_BASE_URL}/users/documents/by-title/${titleName}`,
+      `${API_BASE_URL}/documents/by-title/${titleName}`,
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
       }
     );
 
@@ -286,12 +292,9 @@ export const fetchDocumentsByTitle = async (titleName) => {
 
 export const viewDocument = async (docId) => {
   try {
-    const token = localStorage.getItem("access_token");
-    const response = await fetch(`${API_BASE_URL}/users/documents/${docId}/view`, { 
+    const response = await fetch(`${API_BASE_URL}/documents/${docId}/view`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      credentials: "include",
     });
 
     // ... error handling ...
@@ -305,15 +308,13 @@ export const viewDocument = async (docId) => {
 
 export const approveDocument = async (doc_id, status) => {
   try {
-    const token = localStorage.getItem("access_token"); 
-
-    const response = await fetch(`${API_BASE_URL}/users/approve_document/${doc_id}`, {
+    const response = await fetch(`${API_BASE_URL}/approve_document/${doc_id}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, 
       },
       body: JSON.stringify({ status }),
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -330,8 +331,6 @@ export const approveDocument = async (doc_id, status) => {
 
 export const declineDocument = async (doc_id, status, remarks) => {
   try {
-    const token = localStorage.getItem("access_token");
-
     const payload = {
       status,
       remarks: (remarks || "").trim(),
@@ -339,13 +338,13 @@ export const declineDocument = async (doc_id, status, remarks) => {
 
     console.log("Sending payload:", payload);
 
-    const response = await fetch(`${API_BASE_URL}/users/decline_document/${doc_id}`, {
+    const response = await fetch(`${API_BASE_URL}/decline_document/${doc_id}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -361,21 +360,16 @@ export const declineDocument = async (doc_id, status, remarks) => {
 };
 
 export const updateDocument = async (doc_id, updatedData, file = null) => {
-  const token = localStorage.getItem("access_token");
-  if (!token) throw new Error("Authentication token not found.");
-
   const formData = new FormData();
   const payloadBase64 = btoa(JSON.stringify(updatedData)); // Base64-encode JSON
   formData.append("payload_base64", payloadBase64);
 
   if (file) formData.append("file", file);
 
-  const res = await fetch(`${API_BASE_URL}/users/edit-document/${doc_id}`, {
+  const res = await fetch(`${API_BASE_URL}/edit-document/${doc_id}`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
     body: formData,
+    credentials: "include",
   });
 
   if (!res.ok) {
@@ -386,12 +380,7 @@ export const updateDocument = async (doc_id, updatedData, file = null) => {
   return await res.json();
 };
 
-export const generateAnswer = async (
-  query,
-  accessToken,
-  onToken,
-  selectedFiles = []
-) => {
+export const generateAnswer = async (query, onToken, selectedFiles = []) => {
   const formData = new FormData();
   formData.append("query", query);
 
@@ -448,11 +437,8 @@ export const generateAnswer = async (
   }
 
   // --- Fetch ---
-  const res = await fetch(`${API_BASE_URL}/users/generate`, {
+  const res = await fetch(`${API_BASE_URL}/generate`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
     body: formData,
   });
 
@@ -474,40 +460,43 @@ export const generateAnswer = async (
   }
 };
 
-export const createDocumentInfo = async(payload) => {
+export const createDocumentInfo = async (payload) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/add-documentInfo`,{
-      method:"POST",
-      headers:{
-        'Content-Type':'application/json'
+    const response = await fetch(`${API_BASE_URL}/add-documentInfo`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-      body:JSON.stringify(payload)
-    })
-    if(!response.ok){
+      body: JSON.stringify(payload),
+      credentials: "include",
+    });
+    if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.detail || 'Something went wrong in creating Document Information')
+      throw new Error(
+        errorData.detail ||
+          "Something went wrong in creating Document Information"
+      );
     }
-    const data = await response.json()
-    return data
+    const data = await response.json();
+    return data;
   } catch (error) {
-    console.error("Failed to create:",error)
-    throw error
+    console.error("Failed to create:", error);
+    throw error;
   }
-}
+};
 
 export const fetchDocumentInfo = async (payload) => {
-  const response = await fetch(`${API_BASE_URL}/users/documentInfo`)
+  const response = await fetch(`${API_BASE_URL}/documentInfo`);
 
-  if(!response.ok){
-    throw new Error("Error fetching document Info")
+  if (!response.ok) {
+    throw new Error("Error fetching document Info");
   }
-  return await response.json()
-}
+  return await response.json();
+};
 
-
-export const changePassword = async ({ token, password,otp }) => {
+export const changePassword = async ({ token, password, otp }) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/change-password`, {
+    const response = await fetch(`${API_BASE_URL}/change-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, password, otp }), // only token + password
@@ -526,7 +515,7 @@ export const changePassword = async ({ token, password,otp }) => {
 };
 export const resetPasswordRequest = async (email) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/request-password-reset`, {
+    const response = await fetch(`${API_BASE_URL}/request-password-reset`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -536,12 +525,13 @@ export const resetPasswordRequest = async (email) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.detail || "Failed to send password reset email");
+      throw new Error(
+        errorData.detail || "Failed to send password reset email"
+      );
     }
 
     const data = await response.json();
     return data; // { message: "Password reset email sent" }
-
   } catch (error) {
     console.error("Password reset request error:", error);
     throw error;
@@ -549,7 +539,7 @@ export const resetPasswordRequest = async (email) => {
 };
 
 export const requestPasswordOtp = async (token, password) => {
-  const response = await fetch(`${API_BASE_URL}/users/request-password-otp`, {
+  const response = await fetch(`${API_BASE_URL}/request-password-otp`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token, password }),
@@ -563,18 +553,13 @@ export const requestPasswordOtp = async (token, password) => {
   return response.json(); // { message: "OTP sent to your email" }
 };
 
-
-
-
 export const fetchConversations = async () => {
-  const token = localStorage.getItem("access_token");
-  const response = await fetch(`${API_BASE_URL}/users/conversations`, {
+  const response = await fetch(`${API_BASE_URL}/conversations`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-       Authorization: `Bearer ${token}`
-
     },
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -584,30 +569,28 @@ export const fetchConversations = async () => {
 };
 
 export const fetchConversationById = async (convId) => {
-    const token = localStorage.getItem("access_token");
-    const response = await fetch(`${API_BASE_URL}/users/conversations/${convId}`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-    });
+  const response = await fetch(`${API_BASE_URL}/conversations/${convId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
 
-    if (!response.ok) {
-        throw new Error("Error fetching conversation");
-    }
-    return await response.json();
+  if (!response.ok) {
+    throw new Error("Error fetching conversation");
+  }
+  return await response.json();
 };
 
 // ✅ Example: create conversation
 export const createConversation = async (title) => {
-  const token = localStorage.getItem("access_token");
-  const response = await fetch(`${API_BASE_URL}/users/conversations`, {
+  const response = await fetch(`${API_BASE_URL}/conversations`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
+    credentials: "include",
     // The payload no longer needs to include the user_id
     body: JSON.stringify({ title }),
   });
@@ -620,31 +603,31 @@ export const createConversation = async (title) => {
 };
 
 export const addMessage = async (convId, payload) => {
-  const token = localStorage.getItem("access_token");
-  const response = await fetch(`${API_BASE_URL}/users/conversations/${convId}/messages`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/conversations/${convId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      credentials: "include",
+    }
+  );
 
   if (!response.ok) throw new Error("Error adding message");
   return await response.json();
 };
 
 export const mostSearchData = async (startDate, endDate, limit = 10) => {
-  const token = localStorage.getItem("access_token");
-
   const response = await fetch(
-    `${API_BASE_URL}/users/top-titles?limit=${limit}&start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`,
+    `${API_BASE_URL}/top-titles?limit=${limit}&start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`,
     {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
     }
   );
 
@@ -655,27 +638,25 @@ export const mostSearchData = async (startDate, endDate, limit = 10) => {
   return response.json();
 };
 
-
 export const submitSatisfactionReview = async (rating) => {
   try {
-    const token = localStorage.getItem("access_token");
     if (!token) {
       throw new Error("Authentication required. Please log in.");
     }
 
-    const response = await fetch(`${API_BASE_URL}/users/submit-review`, {
-      method: 'POST',
+    const response = await fetch(`${API_BASE_URL}/submit-review`, {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ rating })
+      body: JSON.stringify({ rating }),
+      credentials: "include",
     });
 
     const responseData = await response.json();
 
     if (!response.ok) {
-      throw new Error(responseData.detail || 'Failed to submit review');
+      throw new Error(responseData.detail || "Failed to submit review");
     }
 
     return responseData;
@@ -685,32 +666,35 @@ export const submitSatisfactionReview = async (rating) => {
   }
 };
 
-export const fetchSatisfactionMetrics = async () => {
+export const fetchSatisfactionMetrics = async ({
+  start_date,
+  end_date,
+} = {}) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`${API_BASE_URL}/users/satisfaction`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
+
+  const params = new URLSearchParams();
+  if (start_date) params.append("start_date", start_date);
+  if (end_date) params.append("end_date", end_date);
+
+  const response = await fetch(
+    `${API_BASE_URL}/satisfaction?${params.toString()}`,
+    {
+      credentials: "include",
     }
-  });
-  if (!response.ok) {
-    throw new Error("Failed to fetch satisfaction metrics");
-  }
+  );
+
+  if (!response.ok) throw new Error("Failed to fetch satisfaction metrics");
+
   return response.json();
 };
 
 export const deleteDocument = async (docId) => {
-  const token = localStorage.getItem("access_token");
-
-  if (!token) {
-    throw new Error("No access token found. Please log in.");
-  }
-
-  const response = await fetch(`${API_BASE_URL}/users/delete_document/${docId}`, {
-    method: "POST", 
+  const response = await fetch(`${API_BASE_URL}/delete_document/${docId}`, {
+    method: "POST",
     headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json"
-    }
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
   });
 
   if (!response.ok) {

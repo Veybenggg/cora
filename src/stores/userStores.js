@@ -1,7 +1,14 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import {createDepartment,createUsers,deleteDepartment,fetchDepartment,getUser,loginUser,uploadDocument} from '../api/api';
-import { setTokens } from '../api/auth';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import {
+  createDepartment,
+  createUsers,
+  deleteDepartment,
+  fetchDepartment,
+  getUser,
+  loginUser,
+} from "../api/api";
+import { setTokens } from "../api/auth";
 
 export const useAuthStore = create(
   persist(
@@ -14,18 +21,18 @@ export const useAuthStore = create(
       user: null,
       departments: [],
       department: null,
-      user_id:null,
+      user_id: null,
 
       signup: async (userData) => {
         set({ isLoading: true, error: null });
         try {
           const newUser = await createUsers(userData);
-          console.log(newUser);
           set({ isLoading: false, error: null });
           return newUser;
         } catch (err) {
-          console.error('Signup error:', err);
-          set({ isLoading: false, error: err.message || 'signup failed' });
+          console.error("Signup error:", err);
+          set({ isLoading: false, error: err.message || "Signup failed" });
+          throw err;
         }
       },
 
@@ -35,8 +42,8 @@ export const useAuthStore = create(
           const users = await getUser();
           set({ users });
         } catch (error) {
-          set({ error: 'Failed to fetch users' });
-          console.error('Error fetching users:', error);
+          set({ error: "Failed to fetch users" });
+          console.error("Error fetching users:", error);
         }
       },
 
@@ -44,21 +51,18 @@ export const useAuthStore = create(
         set({ isLoading: true, error: null });
         try {
           const login = await loginUser(userData);
-          setTokens(login.access_token, login.refresh_token);
           set({
             isLoading: false,
             error: null,
             isAuthenticated: true,
             role: login.user.role,
             user: login.user.name,
-            user_id:login.user.id,
+            user_id: login.user.id,
             department: login.user.department,
           });
-          console.log(login)
           return login;
         } catch (err) {
-          console.error('Login error', err);
-          set({ isLoading: false, error: err.message || 'login failed' });
+          set({ isLoading: false, error: err.message || "login failed" });
         }
       },
 
@@ -66,10 +70,15 @@ export const useAuthStore = create(
         set({ isLoading: true, error: null });
         try {
           const department = await createDepartment(departmentData);
+          set({ isLoading: false });
           return department;
         } catch (err) {
-          console.error('AddDepartment error', err);
-          set({ isLoading: false, error: err.message || 'Error creating department' });
+          console.error("AddDepartment error", err);
+          set({
+            isLoading: false,
+            error: err.message || "Error creating department",
+          });
+          throw err;
         }
       },
 
@@ -79,9 +88,9 @@ export const useAuthStore = create(
           const departments = await fetchDepartment();
           set({ departments, error: null });
         } catch (err) {
-          console.error('Error fetching departments', err);
+          console.error("Error fetching departments", err);
           set({
-            error: err.message || 'Failed to fetch departments',
+            error: err.message || "Failed to fetch departments",
             isLoading: false,
           });
         }
@@ -89,19 +98,19 @@ export const useAuthStore = create(
 
       deleteDept: async (id) => {
         try {
-            await deleteDepartment(id); // your actual API call
-            set((state) => ({
+          await deleteDepartment(id); // your actual API call
+          set((state) => ({
             departments: state.departments.filter((dept) => dept.id !== id),
             error: null,
-            }));
-            return true; // Explicit success
+          }));
+          return true; // Explicit success
         } catch (err) {
-            console.error("Failed to delete department:", err.message);
-            set({ error: err.message });
-            throw err; // Let caller handle this
+          console.error("Failed to delete department:", err.message);
+          set({ error: err.message });
+          throw err; // Let caller handle this
         }
-       },
-      
+      },
+
       signout: () => {
         set({
           isAuthenticated: false,
@@ -109,14 +118,14 @@ export const useAuthStore = create(
           user: null,
           department: null,
         });
-         localStorage.removeItem('auth-storage'); 
-         localStorage.removeItem('access_token');
-         localStorage.removeItem('refresh_token');
-         localStorage.removeItem('document-storage'); 
+        localStorage.removeItem("auth-storage");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("document-storage");
       },
     }),
     {
-      name: 'auth-storage', 
+      name: "auth-storage",
       partialize: (state) => ({
         role: state.role,
         user: state.user,

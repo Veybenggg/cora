@@ -45,7 +45,7 @@ export default function ModalAddDepartment({ isOpen, onClose, onSave }) {
       onClose();
     } catch (err) {
       console.error("Failed to create department:", err);
-      toast.error("❌ Failed to create department. Please try again.");
+      toast.error(`❌ ${err.message}`);
     } finally {
       setIsSaving(false);
     }

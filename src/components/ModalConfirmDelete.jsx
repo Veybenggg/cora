@@ -37,14 +37,18 @@ export default function ModalConfirmDelete({
   };
 
   const handleConfirm = async () => {
-    try {
-      await onConfirm();
-      onClose();
-    } catch (err) {
-      console.error("Delete failed:", err);
-      toast.error("❌ Failed to delete item.", { position: "bottom-right" });
-    }
-  };
+  if (!onConfirm) return;
+
+  try {
+    await onConfirm(); 
+    onClose();
+  } catch (err) {
+    console.error("Delete failed:", err);
+    toast.error(`❌ ${err?.message || "Failed to delete item."}`, {
+      position: "bottom-right",
+    });
+  }
+};
 
   return (
     <div
