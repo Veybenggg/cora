@@ -385,9 +385,9 @@ export const generateAnswer = async (query, onToken, selectedFiles = []) => {
   formData.append("query", query);
 
   // --- Attach files ---
-  selectedFiles.forEach((file) => {
-    formData.append("files", file);
-  });
+  if (!Array.isArray(selectedFiles)) {
+    selectedFiles = selectedFiles ? [selectedFiles] : [];
+  }
 
   // --- Attach device info ---
 
