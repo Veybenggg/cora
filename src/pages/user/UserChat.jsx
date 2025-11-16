@@ -213,7 +213,7 @@ export default function UserChat() {
           return [...updated.slice(0, -1), last];
         });
       },
-      selectedImages
+      selectedImages || []
     );
 
     // --- ✅ Store assistant message in backend ---
