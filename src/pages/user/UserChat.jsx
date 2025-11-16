@@ -191,7 +191,6 @@ export default function UserChat() {
   setSelectedImages([]);
   setSubmitted(true);
 
-  const accessToken = useAuthStore.getState().access_token;
   let streamedAnswer = "";
 
   try {
@@ -203,9 +202,7 @@ export default function UserChat() {
     // --- Stream assistant answer ---
     await generateAnswer(
       trimmed,
-      accessToken,
       (chunk) => {
-        console.log("chunk received:", chunk);
         streamedAnswer += chunk;
         setChatHistory((prev) =>
           prev.map((msg, idx) =>
