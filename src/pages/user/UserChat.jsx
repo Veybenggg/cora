@@ -205,13 +205,15 @@ export default function UserChat() {
       trimmed,
       accessToken,
       (chunk) => {
+        console.log("chunk received:", chunk);
         streamedAnswer += chunk;
-        setChatHistory((prev) => {
-          const updated = [...prev];
-          const last = updated[updated.length - 1];
-          if (last.role === "assistant") last.text = streamedAnswer;
-          return [...updated.slice(0, -1), last];
-        });
+        setChatHistory((prev) =>
+          prev.map((msg, idx) =>
+            idx === prev.length - 1 && msg.role === "assistant"
+              ? { ...msg, text: streamedAnswer }
+              : msg
+          )
+        );
       },
       selectedImages || []
     );
