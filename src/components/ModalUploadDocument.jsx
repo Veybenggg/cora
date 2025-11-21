@@ -166,8 +166,10 @@ export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
                     {documentTypes.map((type) => (
                       <option key={type.id} value={type.id}>
                         {type.name}
+                        
                       </option>
                     ))}
+                    
                   </select>
                 <button
                   type="button"

@@ -512,18 +512,42 @@ const handleRegister = async (e) => {
               </div>
               <button
                 type="submit"
-                className="hidden sm:inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-medium text-white transition gap-2"
-                style={{ backgroundColor: primaryColor }}
                 disabled={isTyping || (!query.trim() && selectedImages.length === 0)}
+                className="inline-flex items-center justify-center rounded-full 
+                          px-3 py-2 text-white transition
+                          sm:px-5 sm:py-2
+                          text-sm sm:text-sm"
+                style={{ backgroundColor: primaryColor }}
               >
-                {isTyping ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  "Send"
-                )}
+                {/* Mobile icon */}
+                <span className="sm:hidden flex">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-5 h-5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 12l12-8-4 8 4 8-12-8z"
+                    />
+                  </svg>
+                </span>
+
+                {/* Desktop text */}
+                <span className="hidden sm:flex items-center gap-2">
+                  {isTyping ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Send"
+                  )}
+                </span>
               </button>
             </div>
           </div>
