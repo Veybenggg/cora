@@ -708,3 +708,26 @@ export const deleteDocument = async (docId) => {
   const data = await response.json();
   return data;
 };
+
+export const deleteDocInfo = async (typeId) => {
+  const response = await fetch(
+    `${API_BASE_URL}/delete-documentInfo/${typeId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.detail || "Failed to delete document information."
+    );
+  }
+
+  const data = await response.json();
+  return data;
+};

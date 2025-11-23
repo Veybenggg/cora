@@ -278,69 +278,7 @@ function AdminApproverDashboard() {
           </Link>
         </div>
 
-        {/* Pending Documents Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-10">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h3 className="text-lg font-semibold text-gray-900">Pending Documents</h3>
-            <p className="text-sm text-gray-600 mt-1">Review and take action on submissions</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Document</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Submitted By</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Timestamp</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Action</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {documents.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-gray-50 transition-colors duration-200">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{doc.title}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{doc.uploaded_by_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {doc.upload_timestamp ? new Date(doc.upload_timestamp).toLocaleString() : "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold capitalize
-                          ${
-                            doc.status === "pending"
-                              ? "bg-blue-100 text-blue-700"
-                              : doc.status === "completed"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-rose-100 text-rose-700"
-                          }`}
-                      >
-                        {doc.status === "completed"
-                          ? "Approved"
-                          : doc.status?.charAt(0).toUpperCase() + doc.status?.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-md !bg-blue-600 !text-white text-sm font-medium shadow hover:!bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
-                        onClick={() => handleView(doc)}
-                        title="View details"
-                      >
-                        <Eye className="w-4 h-4" /> View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {documents.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="p-6 text-center text-gray-500 text-sm">
-                      No documents found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+       
 
         {/* ====== Charts Section (copied from AdminCreatorDashboard) ====== */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">

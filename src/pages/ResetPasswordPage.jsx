@@ -130,7 +130,7 @@ export default function ResetPasswordPage() {
       {showOtpModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-lg">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">
+            <h3 className="text-lg font-semibold mb-4 !text-gray-800">
               Enter OTP
             </h3>
             <form onSubmit={handleOtpSubmit} className="space-y-4">

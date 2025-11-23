@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import ModalManageDocumentType from "./ModalManageDocumentType";
-import { fetchDocumentInfo} from "../api/api";
+import { fetchDocumentInfo,deleteDocInfo} from "../api/api";
 import { FileUp, Info, Tag, X, Loader2, ChevronDown, Trash2 } from "lucide-react";
 import { useDocumentStore } from "../stores/useDocumentStore";
+import toast from "react-hot-toast";
 
 export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
   const [typeOfInfo, setTypeOfInfo] = useState("");
@@ -64,13 +65,16 @@ export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
 
   const handleDeleteType = async (e, typeId) => {
     e.stopPropagation();
+    
     if (window.confirm("Are you sure you want to delete this document type?")) {
       try {
-       
+        await deleteDocInfo(typeId)
         setDocumentTypes((prev) => prev.filter((t) => t.id !== typeId));
         if (typeOfInfo === typeId) setTypeOfInfo("");
+        alert("Deleted Successfully")
       } catch (err) {
         console.error("Failed to delete document type:", err);
+        alert(err.message)
       }
     }
   };
@@ -192,8 +196,8 @@ export default function ModalUploadDocument({ isOpen, onClose, onUpload }) {
                           documentTypes.map((type) => (
                             <div
                               key={type.id}
-                              className={`flex items-center justify-between px-4 py-1 hover:bg-gray-50 cursor-pointer group ${
-                                typeOfInfo === type.id ? "!bg-gray-400" : ""
+                              className={`flex items-center justify-between px-4 py-2 hover:bg-gray-50 cursor-pointer group ${
+                                typeOfInfo === type.id ? "bg-gray-100" : ""
                               }`}
                               onClick={() => handleSelectType(type.id)}
                             >
