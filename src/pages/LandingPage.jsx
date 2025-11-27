@@ -106,30 +106,30 @@ export default function LandingPage() {
   );
 
   const speak = (text, messageId) => {
-  if (!window.speechSynthesis) return;
+    if (!window.speechSynthesis) return;
 
-  window.speechSynthesis.cancel();
+    window.speechSynthesis.cancel();
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-US";
-  utterance.rate = 1;
-  utterance.pitch = 1;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 1;
+    utterance.pitch = 1;
 
-  setIsSpeaking(true);
-  setActiveMessageId(messageId);
+    setIsSpeaking(true);
+    setActiveMessageId(messageId);
 
-  utterance.onend = () => {
-    setIsSpeaking(false);
-    setActiveMessageId(null);
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setActiveMessageId(null);
+    };
+
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setActiveMessageId(null);
+    };
+
+    window.speechSynthesis.speak(utterance);
   };
-
-  utterance.onerror = () => {
-    setIsSpeaking(false);
-    setActiveMessageId(null);
-  };
-
-  window.speechSynthesis.speak(utterance);
-};
 
   const tint20 = useMemo(
     () => (primaryColor?.startsWith?.("#") ? `${primaryColor}20` : primaryColor),
@@ -182,7 +182,7 @@ export default function LandingPage() {
       );
 
       if (voiceMode && streamedAnswer.trim()) {
-      const assistantId = Date.now();
+        const assistantId = Date.now();
         setChatHistory((prev) => {
           const updated = [...prev];
           updated[updated.length - 1].id = assistantId;
@@ -280,31 +280,30 @@ export default function LandingPage() {
     }
   };
 
-// === REGISTER ===
-const handleRegister = async (e) => {
-  e.preventDefault();
-  const userData = {
-    name: `${firstName} ${lastName} ${middleInitial}`,
-    email,
-    password,
+  // === REGISTER ===
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    const userData = {
+      name: `${firstName} ${lastName} ${middleInitial}`,
+      email,
+      password,
+    };
+
+    try {
+      setIsRegistering(true);
+      const response = await signup(userData);
+
+      toast.success("Account created successfully!");
+      window.location.reload();
+    } catch (err) {
+      console.error("Registration error:", err);
+
+      // err.message contains your Pydantic validation message
+      toast.error(err.message || "Something went wrong, please try again.");
+    } finally {
+      setIsRegistering(false);
+    }
   };
-
-  try {
-    setIsRegistering(true);
-    const response = await signup(userData);
-
-    toast.success("Account created successfully!");
-    window.location.reload();
-  } catch (err) {
-    console.error("Registration error:", err);
-
-    // err.message contains your Pydantic validation message
-    toast.error(err.message || "Something went wrong, please try again.");
-  } finally {
-    setIsRegistering(false);
-  }
-};
-
 
   // Auto-scroll
   useEffect(() => {
@@ -408,34 +407,49 @@ const handleRegister = async (e) => {
                     }
                   >
                     <span className="font-semibold">{isUser ? "You" : "CORA"}:</span>{" "}
+                    
+                    {/* Display images if they exist */}
+                    {chat.images && chat.images.length > 0 && (
+                      <div className="flex flex-wrap gap-2 my-2">
+                        {chat.images.map((imgUrl, imgIdx) => (
+                          <img
+                            key={imgIdx}
+                            src={imgUrl}
+                            alt={`uploaded-${imgIdx}`}
+                            className="max-w-xs w-full sm:w-48 h-auto object-cover rounded-lg border"
+                            style={{ borderColor: primaryColor }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    
                     <div className="whitespace-pre-wrap break-words">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {chat.text?.trim() || "Cora is generating"}
-                        
                       </ReactMarkdown>
                     </div>
+                    
                     {!isUser && isSpeaking && activeMessageId === chat.id && (
-                    <div className="mt-2 flex justify-start">
-                      <button
-                        onClick={() => {
-                          window.speechSynthesis.cancel();
-                          setIsSpeaking(false);
-                          setActiveMessageId(null);
-                          toast("Cora stopped talking.");
-                        }}
-                        className="p-2 rounded-full border hover:bg-gray-100 transition flex items-center justify-center"
-                        style={{
-                          borderColor: primaryColor,
-                          color: primaryColor,
-                          backgroundColor: "#fff",
-                        }}
-                        title="Stop Cora's voice"
-                      >
-                        🔇
-                      </button>
-                    </div>
-                  )}
-
+                      <div className="mt-2 flex justify-start">
+                        <button
+                          onClick={() => {
+                            window.speechSynthesis.cancel();
+                            setIsSpeaking(false);
+                            setActiveMessageId(null);
+                            toast("Cora stopped talking.");
+                          }}
+                          className="p-2 rounded-full border hover:bg-gray-100 transition flex items-center justify-center"
+                          style={{
+                            borderColor: primaryColor,
+                            color: primaryColor,
+                            backgroundColor: "#fff",
+                          }}
+                          title="Stop Cora's voice"
+                        >
+                          🔇
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
