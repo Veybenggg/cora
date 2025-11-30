@@ -175,7 +175,9 @@ export default function LandingPage() {
           setChatHistory((prev) => {
             const updated = [...prev];
             const last = updated[updated.length - 1];
-            if (last.role === "assistant") last.text = streamedAnswer;
+            if (last.role === "assistant") {
+              last.text = streamedAnswer.replace(/\r\n|\r/g, "\n");
+            };
             return [...updated.slice(0, -1), last];
           });
         },
