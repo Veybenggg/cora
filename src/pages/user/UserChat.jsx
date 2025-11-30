@@ -12,6 +12,7 @@ import {
 } from "../../api/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import toast from "react-hot-toast";
 
 export default function UserChat() {
@@ -79,30 +80,30 @@ export default function UserChat() {
 
   // --- Text to Speech (TTS) ---
   const speak = (text, messageId) => {
-  if (!window.speechSynthesis) return;
+    if (!window.speechSynthesis) return;
 
-  window.speechSynthesis.cancel();
+    window.speechSynthesis.cancel();
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-US";
-  utterance.rate = 1;
-  utterance.pitch = 1;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 1;
+    utterance.pitch = 1;
 
-  setIsSpeaking(true);
-  setActiveMessageId(messageId);
+    setIsSpeaking(true);
+    setActiveMessageId(messageId);
 
-  utterance.onend = () => {
-    setIsSpeaking(false);
-    setActiveMessageId(null);
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setActiveMessageId(null);
+    };
+
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setActiveMessageId(null);
+    };
+
+    window.speechSynthesis.speak(utterance);
   };
-
-  utterance.onerror = () => {
-    setIsSpeaking(false);
-    setActiveMessageId(null);
-  };
-
-  window.speechSynthesis.speak(utterance);
-};
 
   // --- Web Speech API ---
   useEffect(() => {
@@ -158,89 +159,89 @@ export default function UserChat() {
 
   // --- Submit ---
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  const trimmed = query.trim();
-  if ((!trimmed && selectedImages.length === 0) || isTyping) return;
+    e.preventDefault();
+    const trimmed = query.trim();
+    if ((!trimmed && selectedImages.length === 0) || isTyping) return;
 
-  let convId = currentConversationId;
-  if (!convId) {
+    let convId = currentConversationId;
+    if (!convId) {
+      try {
+        const newConv = await createConversation(trimmed?.slice(0, 50) || "New Chat");
+        convId = newConv.id;
+        setCurrentConversationId(convId);
+        setSidebarRefreshKey((prev) => prev + 1);
+      } catch (err) {
+        console.error("Failed to create conversation:", err);
+        toast.error("Unable to create a conversation.");
+        return;
+      }
+    }
+
+    const userMsgId = Date.now();
+    appendMessage({
+      id: userMsgId,
+      role: "user",
+      text: trimmed,
+      images: selectedImages.map((file) => URL.createObjectURL(file)),
+    });
+
+    const assistantMsgId = userMsgId + 1;
+    setChatHistory((prev) => [...prev, { id: assistantMsgId, role: "assistant", text: "" }]);
+
+    setQuery("");
+    setSelectedImages([]);
+    setSubmitted(true);
+
+    let streamedAnswer = "";
+
     try {
-      const newConv = await createConversation(trimmed?.slice(0, 50) || "New Chat");
-      convId = newConv.id;
-      setCurrentConversationId(convId);
-      setSidebarRefreshKey((prev) => prev + 1);
+      setIsTyping(true);
+
+      // --- Store user message in backend ---
+      await addMessage(convId, { role: "user", content: trimmed });
+
+      // --- Stream assistant answer ---
+      await generateAnswer(
+        trimmed,
+        (chunk) => {
+          streamedAnswer += chunk;
+          setChatHistory((prev) =>
+            prev.map((msg, idx) =>
+              idx === prev.length - 1 && msg.role === "assistant"
+                ? { ...msg, text: streamedAnswer }
+                : msg
+            )
+          );
+        },
+        selectedImages || []
+      );
+
+      // --- ✅ Store assistant message in backend ---
+      if (streamedAnswer.trim()) {
+        await addMessage(convId, { role: "assistant", content: streamedAnswer });
+      }
+
+      if (voiceMode && streamedAnswer.trim()) {
+        const assistantId = Date.now();
+        setChatHistory((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1].id = assistantId;
+          return updated;
+        });
+        speak(streamedAnswer, assistantId);
+        setVoiceMode(false);
+      }
     } catch (err) {
-      console.error("Failed to create conversation:", err);
-      toast.error("Unable to create a conversation.");
-      return;
+      setChatHistory((prev) => [
+        ...prev.slice(0, -1),
+        { role: "assistant", text: "Sorry, something went wrong while generating a response." },
+      ]);
+      console.error("Streaming error:", err);
+      toast.error("Something went wrong while generating a response.");
+    } finally {
+      setIsTyping(false);
     }
-  }
-
-  const userMsgId = Date.now();
-  appendMessage({
-    id: userMsgId,
-    role: "user",
-    text: trimmed,
-    images: selectedImages.map((file) => URL.createObjectURL(file)),
-  });
-
-  const assistantMsgId = userMsgId + 1;
-  setChatHistory((prev) => [...prev, { id: assistantMsgId, role: "assistant", text: "" }]);
-
-  setQuery("");
-  setSelectedImages([]);
-  setSubmitted(true);
-
-  let streamedAnswer = "";
-
-  try {
-    setIsTyping(true);
-
-    // --- Store user message in backend ---
-    await addMessage(convId, { role: "user", content: trimmed });
-
-    // --- Stream assistant answer ---
-    await generateAnswer(
-      trimmed,
-      (chunk) => {
-        streamedAnswer += chunk;
-        setChatHistory((prev) =>
-          prev.map((msg, idx) =>
-            idx === prev.length - 1 && msg.role === "assistant"
-              ? { ...msg, text: streamedAnswer }
-              : msg
-          )
-        );
-      },
-      selectedImages || []
-    );
-
-    // --- ✅ Store assistant message in backend ---
-    if (streamedAnswer.trim()) {
-      await addMessage(convId, { role: "assistant", content: streamedAnswer });
-    }
-
-    if (voiceMode && streamedAnswer.trim()) {
-      const assistantId = Date.now();
-      setChatHistory((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1].id = assistantId;
-        return updated;
-      });
-      speak(streamedAnswer, assistantId);
-      setVoiceMode(false);
-    }
-  } catch (err) {
-    setChatHistory((prev) => [
-      ...prev.slice(0, -1),
-      { role: "assistant", text: "Sorry, something went wrong while generating a response." },
-    ]);
-    console.error("Streaming error:", err);
-    toast.error("Something went wrong while generating a response.");
-  } finally {
-    setIsTyping(false);
-  }
-};
+  };
 
   // --- Helpers ---
   const appendMessage = (msg) => setChatHistory((prev) => [...prev, msg]);
@@ -256,33 +257,33 @@ export default function UserChat() {
   };
 
   const handleSelectChat = async (convId) => {
-  setQuery("");
-  setSubmitted(true);
-  setIsTyping(false);
-  setSelectedImages([]);
-  setCurrentConversationId(convId);
+    setQuery("");
+    setSubmitted(true);
+    setIsTyping(false);
+    setSelectedImages([]);
+    setCurrentConversationId(convId);
 
-  try {
-    const convData = await fetchConversationById(convId);
+    try {
+      const convData = await fetchConversationById(convId);
 
-    if (convData.messages && convData.messages.length > 0) {
-      const messages = convData.messages.map((msg) => ({
-        id: msg.id,             // Use backend id for uniqueness
-        role: msg.role,
-        text: msg.content,
-        images: msg.images || [], // optional if backend returns images
-      }));
-      setChatHistory(messages);
-    } else {
-      setChatHistory([]);
+      if (convData.messages && convData.messages.length > 0) {
+        const messages = convData.messages.map((msg) => ({
+          id: msg.id,
+          role: msg.role,
+          text: msg.content,
+          images: msg.images || [],
+        }));
+        setChatHistory(messages);
+      } else {
+        setChatHistory([]);
+      }
+    } catch (error) {
+      console.error("Failed to load conversation:", error);
+      setChatHistory([
+        { id: Date.now(), role: "assistant", text: "Sorry, failed to load this conversation." },
+      ]);
     }
-  } catch (error) {
-    console.error("Failed to load conversation:", error);
-    setChatHistory([
-      { id: Date.now(), role: "assistant", text: "Sorry, failed to load this conversation." },
-    ]);
-  }
-};
+  };
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
@@ -413,33 +414,102 @@ export default function UserChat() {
                         : { backgroundColor: tint15, color: primaryColor }
                     }
                   >
-                    <span className="font-semibold">{isUser ? "You" : "CORA"}:</span>{" "}
-                    <div className="whitespace-pre-wrap break-words">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <span className="font-semibold mb-2 block">{isUser ? "You" : "CORA"}:</span>
+                    
+                    {/* FIXED: Proper markdown rendering with spacing */}
+                    <div className="prose prose-sm max-w-none break-words">
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkGfm, remarkBreaks]}
+                        components={{
+                          // Add proper spacing to paragraphs
+                          p: ({ children }) => (
+                            <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>
+                          ),
+                          // Add spacing to unordered lists
+                          ul: ({ children }) => (
+                            <ul className="mb-4 ml-6 list-disc space-y-2 last:mb-0">{children}</ul>
+                          ),
+                          // Add spacing to ordered lists with forced decimal numbering
+                          ol: ({ children, ...props }) => (
+                            <ol 
+                              className="mb-4 ml-6 space-y-2 last:mb-0"
+                              style={{ 
+                                listStyleType: 'decimal',
+                                counterReset: 'item'
+                              }}
+                              {...props}
+                            >
+                              {children}
+                            </ol>
+                          ),
+                          // Style list items with forced numbering
+                          li: ({ children, ordered }) => (
+                            <li 
+                              className="leading-relaxed"
+                              style={ordered ? { 
+                                display: 'list-item',
+                                listStyleType: 'decimal'
+                              } : {}}
+                            >
+                              {children}
+                            </li>
+                          ),
+                          // Add spacing to headings
+                          h1: ({ children }) => (
+                            <h1 className="text-xl font-bold mb-3 mt-6 first:mt-0">{children}</h1>
+                          ),
+                          h2: ({ children }) => (
+                            <h2 className="text-lg font-bold mb-3 mt-5 first:mt-0">{children}</h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3 className="text-base font-bold mb-2 mt-4 first:mt-0">{children}</h3>
+                          ),
+                          // Style strong/bold text
+                          strong: ({ children }) => (
+                            <strong className="font-semibold">{children}</strong>
+                          ),
+                          // Add spacing to blockquotes
+                          blockquote: ({ children }) => (
+                            <blockquote className="border-l-4 pl-4 my-4 italic opacity-80">{children}</blockquote>
+                          ),
+                          // Add spacing to code blocks
+                          pre: ({ children }) => (
+                            <pre className="mb-4 p-3 rounded bg-gray-100 overflow-x-auto">{children}</pre>
+                          ),
+                          // Inline code styling
+                          code: ({ inline, children }) => (
+                            inline 
+                              ? <code className="px-1 py-0.5 rounded bg-gray-100 text-sm">{children}</code>
+                              : <code>{children}</code>
+                          ),
+                        }}
+                      >
                         {chat.text?.trim() || "Cora is generating"}
                       </ReactMarkdown>
                     </div>
+
                     {!isUser && isSpeaking && activeMessageId === chat.id && (
-                    <div className="mt-2 flex justify-start">
-                      <button
-                        onClick={() => {
-                          window.speechSynthesis.cancel();
-                          setIsSpeaking(false);
-                          setActiveMessageId(null);
-                          toast("Cora stopped talking.");
-                        }}
-                        className="p-2 rounded-full border hover:bg-gray-100 transition flex items-center justify-center"
-                        style={{
-                          borderColor: primaryColor,
-                          color: primaryColor,
-                          backgroundColor: "#fff",
-                        }}
-                        title="Stop Cora's voice"
-                      >
-                        🔇
-                      </button>
-                    </div>
-                  )}
+                      <div className="mt-2 flex justify-start">
+                        <button
+                          onClick={() => {
+                            window.speechSynthesis.cancel();
+                            setIsSpeaking(false);
+                            setActiveMessageId(null);
+                            toast("Cora stopped talking.");
+                          }}
+                          className="p-2 rounded-full border hover:bg-gray-100 transition flex items-center justify-center"
+                          style={{
+                            borderColor: primaryColor,
+                            color: primaryColor,
+                            backgroundColor: "#fff",
+                          }}
+                          title="Stop Cora's voice"
+                        >
+                          🔇
+                        </button>
+                      </div>
+                    )}
+
                     {chat.images?.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-2">
                         {chat.images.map((src, i) => (
@@ -460,171 +530,170 @@ export default function UserChat() {
         </div>
 
         {/* Input Box */}
-<form
-  onSubmit={handleSubmit}
-  className="
-    sticky bottom-0    /* stay visible above content */
-    w-full
-    px-3 md:px-4 py-2
-    bg-white/80 backdrop-blur
-  "
-  style={{
-    borderColor: primaryColor,
-    // iOS/Android safe area: keeps the composer above home indicator
-    paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)",
-  }}
->
-  <div
-    className="
-      mx-auto
-      w-full
-      max-w-full
-      sm:max-w-xl
-      md:max-w-2xl
-      lg:max-w-2xl
-      rounded-xl
-      bg-gray-100
-      border
-      flex flex-col gap-2
-      p-2 md:p-3
-    "
-    style={{ borderColor: primaryColor, color: primaryColor }}
-  >
-    {/* Image Preview (wraps on small screens, scrolls if many) */}
-    {selectedImages.length > 0 && (
-      <div className="flex flex-row flex-wrap gap-2 overflow-x-auto">
-        {selectedImages.map((file, idx) => (
-          <div key={idx} className="relative shrink-0">
-            <img
-              src={URL.createObjectURL(file)}
-              alt="preview"
-              className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg border"
-            />
-            <button
-              type="button"
-              onClick={() => removeImage(idx)}
-              className="absolute -top-2 -right-2 rounded-full flex items-center justify-center w-5 h-5 md:w-4 md:h-4 text-white text-xs"
-              style={{ backgroundColor: primaryColor }}
-              aria-label="Remove image"
-              title="Remove image"
-            >
-              ×
-            </button>
+        <form
+          onSubmit={handleSubmit}
+          className="
+            sticky bottom-0
+            w-full
+            px-3 md:px-4 py-2
+            bg-white/80 backdrop-blur
+          "
+          style={{
+            borderColor: primaryColor,
+            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)",
+          }}
+        >
+          <div
+            className="
+              mx-auto
+              w-full
+              max-w-full
+              sm:max-w-xl
+              md:max-w-2xl
+              lg:max-w-2xl
+              rounded-xl
+              bg-gray-100
+              border
+              flex flex-col gap-2
+              p-2 md:p-3
+            "
+            style={{ borderColor: primaryColor, color: primaryColor }}
+          >
+            {/* Image Preview */}
+            {selectedImages.length > 0 && (
+              <div className="flex flex-row flex-wrap gap-2 overflow-x-auto">
+                {selectedImages.map((file, idx) => (
+                  <div key={idx} className="relative shrink-0">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt="preview"
+                      className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="absolute -top-2 -right-2 rounded-full flex items-center justify-center w-5 h-5 md:w-4 md:h-4 text-white text-xs"
+                      style={{ backgroundColor: primaryColor }}
+                      aria-label="Remove image"
+                      title="Remove image"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Input Row */}
+            <div className="flex items-center gap-2">
+              {/* Attach */}
+              <div
+                className="
+                  shrink-0
+                  rounded-lg
+                  p-2 md:p-2
+                  bg-gray-100 hover:bg-gray-200
+                  transition
+                "
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = tint20)}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#f3f4f6")}
+                role="button"
+                tabIndex={0}
+                aria-label="Attach images"
+                title="Attach images"
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && fileInputRef.current?.click()}
+              >
+                <ImageIcon
+                  size={20}
+                  className="md:h-[18px] md:w-[18px]"
+                  style={{ color: primaryColor }}
+                />
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                ref={fileInputRef}
+                onChange={handleFileChange}
+              />
+
+              {/* Text input */}
+              <input
+                ref={inputRef}
+                className="
+                  min-w-0 flex-grow
+                  bg-transparent outline-none disabled:opacity-60
+                  text-sm md:text-base
+                  placeholder:text-xs md:placeholder:text-sm
+                  py-2
+                "
+                placeholder="Ask Cora"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={onKeyDown}
+                onPaste={handlePaste}
+                disabled={isTyping}
+                style={{ color: primaryColor }}
+              />
+
+              {/* Mic */}
+              <div
+                className="shrink-0 rounded-lg p-2 bg-gray-100 transition cursor-pointer"
+                style={{
+                  backgroundColor: listening ? "#fee2e2" : "#f3f4f6",
+                  color: listening ? "#dc2626" : undefined,
+                }}
+                onMouseEnter={(e) => {
+                  if (!listening) e.currentTarget.style.backgroundColor = tint20;
+                }}
+                onMouseLeave={(e) => {
+                  if (!listening) e.currentTarget.style.backgroundColor = "#f3f4f6";
+                }}
+                onClick={handleMicClick}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleMicClick()}
+                role="button"
+                tabIndex={0}
+                aria-pressed={listening}
+                aria-label="Voice input"
+                title="Voice input"
+              >
+                <Mic
+                  size={20}
+                  className="md:h-[18px] md:w-[18px]"
+                  style={{ color: listening ? undefined : primaryColor }}
+                />
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                className="
+                  hidden sm:inline-flex
+                  items-center justify-center
+                  rounded-full
+                  px-5 py-2
+                  text-sm font-medium
+                  text-white
+                  transition
+                  gap-2
+                "
+                style={{ backgroundColor: primaryColor }}
+                disabled={isTyping || (!query.trim() && selectedImages.length === 0)}
+              >
+                {isTyping ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Send"
+                )}
+              </button>
+            </div>
           </div>
-        ))}
-      </div>
-    )}
-
-    {/* Input Row */}
-    <div className="flex items-center gap-2">
-      {/* Attach */}
-      <div
-        className="
-          shrink-0
-          rounded-lg
-          p-2 md:p-2
-          bg-gray-100 hover:bg-gray-200
-          transition
-        "
-        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = tint20)}
-        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#f3f4f6")}
-        role="button"
-        tabIndex={0}
-        aria-label="Attach images"
-        title="Attach images"
-        onClick={() => fileInputRef.current?.click()}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && fileInputRef.current?.click()}
-      >
-        <ImageIcon
-          size={20}
-          className="md:h-[18px] md:w-[18px]"
-          style={{ color: primaryColor }}
-        />
-      </div>
-      <input
-        type="file"
-        accept="image/*"
-        multiple
-        hidden
-        ref={fileInputRef}
-        onChange={handleFileChange}
-      />
-
-      {/* Text input: grows, wraps long text nicely */}
-      <input
-        ref={inputRef}
-        className="
-          min-w-0 flex-grow
-          bg-transparent outline-none disabled:opacity-60
-          text-sm md:text-base
-          placeholder:text-xs md:placeholder:text-sm
-          py-2
-        "
-        placeholder="Ask Cora"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={onKeyDown}
-        onPaste={handlePaste}
-        disabled={isTyping}
-        style={{ color: primaryColor }}
-      />
-
-      {/* Mic */}
-      <div
-        className="shrink-0 rounded-lg p-2 bg-gray-100 transition cursor-pointer"
-        style={{
-          backgroundColor: listening ? "#fee2e2" : "#f3f4f6",
-          color: listening ? "#dc2626" : undefined,
-        }}
-        onMouseEnter={(e) => {
-          if (!listening) e.currentTarget.style.backgroundColor = tint20;
-        }}
-        onMouseLeave={(e) => {
-          if (!listening) e.currentTarget.style.backgroundColor = "#f3f4f6";
-        }}
-        onClick={handleMicClick}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleMicClick()}
-        role="button"
-        tabIndex={0}
-        aria-pressed={listening}
-        aria-label="Voice input"
-        title="Voice input"
-      >
-        <Mic
-          size={20}
-          className="md:h-[18px] md:w-[18px]"
-          style={{ color: listening ? undefined : primaryColor }}
-        />
-      </div>
-
-      {/* Submit (icon-only on mobile, keep form submit behavior) */}
-<button
-  type="submit"
-  className="
-    hidden sm:inline-flex
-    items-center justify-center
-    rounded-full
-    px-5 py-2
-    text-sm font-medium
-    text-white
-    transition
-    gap-2
-  "
-  style={{ backgroundColor: primaryColor }}
-  disabled={isTyping || (!query.trim() && selectedImages.length === 0)}
->
-  {isTyping ? (
-    <>
-      <Loader2 className="h-4 w-4 animate-spin" />
-      Sending...
-    </>
-  ) : (
-    "Send"
-  )}
-</button>
-    </div>
-  </div>
-</form>
+        </form>
       </div>
     </div>
   );

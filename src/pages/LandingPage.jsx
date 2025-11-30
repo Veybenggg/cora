@@ -409,7 +409,7 @@ export default function LandingPage() {
                         : { backgroundColor: tint15, color: primaryColor }
                     }
                   >
-                    <span className="font-semibold">{isUser ? "You" : "CORA"}:</span>{" "}
+                    <span className="font-semibold mb-2 block">{isUser ? "You" : "CORA"}:</span>
                     
                     {/* Display images if they exist */}
                     {chat.images && chat.images.length > 0 && (
@@ -426,8 +426,66 @@ export default function LandingPage() {
                       </div>
                     )}
                     
-                    <div className="break-words">
-                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                    {/* FIXED: Proper markdown rendering with spacing */}
+                   <div className="prose prose-sm max-w-none break-words">
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkGfm, remarkBreaks]}
+                        components={{
+                          p: ({ children }) => (
+                            <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="mb-4 ml-6 list-disc space-y-2 last:mb-0">{children}</ul>
+                          ),
+                          // FIXED: Force sequential numbering with CSS counter
+                          ol: ({ children, ...props }) => (
+                            <ol 
+                              className="mb-4 ml-6 space-y-2 last:mb-0"
+                              style={{ 
+                                listStyleType: 'decimal',
+                                counterReset: 'item'
+                              }}
+                              {...props}
+                            >
+                              {children}
+                            </ol>
+                          ),
+                          li: ({ children, ordered }) => (
+                            <li 
+                              className="leading-relaxed"
+                              style={ordered ? { 
+                                display: 'list-item',
+                                listStyleType: 'decimal'
+                              } : {}}
+                            >
+                              {children}
+                            </li>
+                          ),
+                          h1: ({ children }) => (
+                            <h1 className="text-xl font-bold mb-3 mt-6 first:mt-0">{children}</h1>
+                          ),
+                          h2: ({ children }) => (
+                            <h2 className="text-lg font-bold mb-3 mt-5 first:mt-0">{children}</h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3 className="text-base font-bold mb-2 mt-4 first:mt-0">{children}</h3>
+                          ),
+                          strong: ({ children }) => (
+                            <strong className="font-semibold">{children}</strong>
+                          ),
+                          blockquote: ({ children }) => (
+                            <blockquote className="border-l-4 pl-4 my-4 italic opacity-80">{children}</blockquote>
+                          ),
+                          pre: ({ children }) => (
+                            <pre className="mb-4 p-3 rounded bg-gray-100 overflow-x-auto">{children}</pre>
+                          ),
+                          code: ({ inline, children }) => (
+                            inline 
+                              ? <code className="px-1 py-0.5 rounded bg-gray-100 text-sm">{children}</code>
+                              : <code>{children}</code>
+                          ),
+                        }}
+                      >
                         {chat.text?.trim() || "Cora is generating"}
                       </ReactMarkdown>
                     </div>
