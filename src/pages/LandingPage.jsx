@@ -153,10 +153,15 @@ export default function LandingPage() {
       images: selectedImages.map((file) => URL.createObjectURL(file)),
     });
 
-    setChatHistory((prev) => [
-      ...prev,
-      { id: messageId + 1, role: "assistant", text: "" },
-    ]);
+    setChatHistory((prev) => {
+      const updated = [...prev];
+      const last = updated[updated.length - 1];
+      if (last.role === "assistant") {
+      
+        last.text = streamedAnswer.replace(/\r\n|\r/g, "\n");
+      }
+      return [...updated.slice(0, -1), last];
+    });
 
     setQuery("");
     setSelectedImages([]);
