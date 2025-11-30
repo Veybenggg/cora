@@ -423,7 +423,7 @@ export default function LandingPage() {
                       </div>
                     )}
                     
-                    <div className="whitespace-pre-wrap break-words">
+                    <div className="break-words">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {chat.text?.trim() || "Cora is generating"}
                       </ReactMarkdown>
