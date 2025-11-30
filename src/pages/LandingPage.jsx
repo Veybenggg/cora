@@ -12,6 +12,7 @@ import { generateAnswer } from "../api/api";
 import toast from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 export default function LandingPage() {
   const [query, setQuery] = useState("");
@@ -424,7 +425,7 @@ export default function LandingPage() {
                     )}
                     
                     <div className="break-words">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
                         {chat.text?.trim() || "Cora is generating"}
                       </ReactMarkdown>
                     </div>
