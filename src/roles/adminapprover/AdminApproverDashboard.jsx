@@ -154,7 +154,7 @@ function AdminApproverDashboard() {
     const fetchMostSearch = async () => {
       try {
         if (!searchStartDate || !searchEndDate) return;
-        const result = await mostSearchData(searchStartDate, searchEndDate, 10);
+        const result = await mostSearchData(searchStartDate, searchEndDate, 5);
         const formatted = result.map((item) => ({
           name: item.title,
           count: item.count,

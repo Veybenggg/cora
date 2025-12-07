@@ -136,7 +136,7 @@ useEffect(() => {
     try {
       if (!searchStartDate || !searchEndDate) return;
 
-      const data = await mostSearchData(searchStartDate, searchEndDate, 10);
+      const data = await mostSearchData(searchStartDate, searchEndDate, 5);
 
       const formatted = data.map((item) => ({
         name: item.title,
