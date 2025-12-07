@@ -622,7 +622,7 @@ export const addMessage = async (convId, payload) => {
   return await response.json();
 };
 
-export const mostSearchData = async (startDate, endDate, limit = 10) => {
+export const mostSearchData = async (startDate, endDate, limit = 5) => {
   const response = await fetch(
     `${API_BASE_URL}/top-titles?limit=${limit}&start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`,
     {
