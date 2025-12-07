@@ -19,18 +19,19 @@ function AdminApproverUploadDocuments() {
 
   // ✅ Responsive breakpoint
   useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
-    const mql = window.matchMedia("(max-width: 767.98px)");
-    const handler = (e) => setIsMobile(!!e.matches);
-    handler(mql);
-    if (typeof mql.addEventListener === "function") {
-      mql.addEventListener("change", handler);
-      return () => mql.removeEventListener("change", handler);
-    } else if (typeof mql.addListener === "function") {
-      mql.addListener(handler);
-      return () => mql.removeListener(handler);
-    }
-  }, []);
+  if (typeof window === "undefined") return;
+
+  const mql = window.matchMedia("(max-width: 767.98px)");
+
+  const handler = (e) => {
+    setIsMobile(e.matches);
+  };
+
+  setIsMobile(mql.matches); // initial value
+  mql.addEventListener("change", handler);
+
+  return () => mql.removeEventListener("change", handler);
+}, []);
 
   // ✅ Prevent background scroll when mobile drawer is open
   useEffect(() => {
