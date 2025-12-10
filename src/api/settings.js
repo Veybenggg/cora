@@ -17,6 +17,7 @@ export const uploadLogo = async (file) => {
   const response = await fetch(`${API_BASE_URL}/settings/upload-logo`, {
     method: "POST",
     body: formData,
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -33,6 +34,7 @@ export const changeNameAPI = async (newName) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ name: newName }),
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -52,6 +54,7 @@ export const changeColorAPI = async (primaryColor, secondaryColor) => {
       primary_color: primaryColor,
       secondary_color: secondaryColor,
     }),
+    credentials: "include",
   });
 
   if (!response.ok) {
