@@ -207,7 +207,7 @@ function CoSuperAdminThemes() {
               <button
                 onClick={resetToCurrent}
                 disabled={isApplying}
-                className="inline-flex items-center gap-2 border border-gray-300 bg-white text-gray-700 px-4 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 border  border-gray-300 bg-white text-white px-4 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <RotateCcw className="w-4 h-4" />
                 Reset
@@ -343,7 +343,7 @@ function CoSuperAdminThemes() {
                   {/* Secondary */}
                   <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-center">
                     <div className="sm:col-span-2">
-                      <label className="text-sm font-semibold text-gray-700">Secondary</label>
+                      <label className="text-sm font-semibold text-white">Secondary</label>
                       <p className="text-xs text-gray-500">Text, accents</p>
                     </div>
                     <div className="sm:col-span-3 flex items-center gap-3">
@@ -470,7 +470,7 @@ function CoSuperAdminThemes() {
                         Primary Action
                       </button>
                       <button
-                        className="px-4 py-2 rounded-lg border"
+                        className="px-4 py-2 rounded-lg border text-white"
                         style={{
                           borderColor: selectedSecondary,
                           color: selectedSecondary,
