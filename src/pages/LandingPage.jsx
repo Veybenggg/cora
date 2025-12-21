@@ -314,6 +314,11 @@ export default function LandingPage() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [chatHistory]);
 
+  const addSpaceBeforeNumbers = (text) => {
+  if (!text) return text;
+  return text.replace(/([a-zA-Z])(\d+)/g, "$1 $2");
+};
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -486,7 +491,7 @@ export default function LandingPage() {
                           ),
                         }}
                       >
-                        {chat.text?.trim() || "Cora is generating"}
+                        {addSpaceBeforeNumbers(chat.text?.trim() || "Cora is generating")}
                       </ReactMarkdown>
                     </div>
                     
